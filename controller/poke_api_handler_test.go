@@ -4,9 +4,12 @@ import (
 	"catching-pokemons/models"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"testing"
 
+	"github.com/gorilla/mux"
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/require"
 )
@@ -72,4 +75,36 @@ func TestGetPokemonFromPokeApiInternalServerError(t *testing.T) {
 	_, err = GetPokemonFromPokeApi(id)
 	c.NotNil(err)
 	c.EqualError(ErrPokeApiFailure, err.Error())
+}
+
+func TestGetPokemon(t *testing.T) {
+	c := require.New(t)
+	r, err := http.NewRequest("GET", "/pokemon/{id}", nil)
+	c.NoError(err)
+
+	w := httptest.NewRecorder()
+
+	vars := map[string]string{
+		"id": "bulbasaur",
+	}
+
+	r = mux.SetURLVars(r, vars)
+
+	GetPokemon(w, r)
+
+	excepctedBodyResponse, err := os.ReadFile("samples/api_response.json")
+	c.NoError(err)
+
+	var expectedPokemon models.Pokemon
+
+	err = json.Unmarshal([]byte(excepctedBodyResponse), &expectedPokemon)
+	c.NoError(err)
+
+	var actualPokemon models.Pokemon
+
+	err = json.Unmarshal([]byte(w.Body.Bytes()), &actualPokemon)
+	c.NoError(err)
+
+	c.Equal(http.StatusOK, w.Code)
+	c.Equal(expectedPokemon, actualPokemon)
 }
