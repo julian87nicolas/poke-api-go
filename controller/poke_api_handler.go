@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 
@@ -68,7 +69,7 @@ func GetPokemonFromPokeApi(id string) (models.PokeApiPokemonResponse, error) {
 		return models.PokeApiPokemonResponse{}, ErrPokeApiFailure
 	}
 
-	body, err := os.ReadAll(response.Body)
+	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return models.PokeApiPokemonResponse{}, err
 	}
